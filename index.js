@@ -21,7 +21,7 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-app.use(express.static("public"));
+app.use(express.static(__dirname));
 app.use(express.json({ limit: '10mb' }));
 
 const PORT = process.env.PORT || 3000;
@@ -666,3 +666,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
