@@ -1,0 +1,48 @@
+{
+  "name": "price-compare-tool",
+  "version": "1.0.0",
+  "description": "Multi-store price comparison website for eBay, Etsy and AliExpress",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "prod": "NODE_ENV=production node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "price-comparison",
+    "ebay",
+    "etsy",
+    "aliexpress",
+    "shopping",
+    "e-commerce",
+    "comparison-tool"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "qs": "^6.14.0"
+  },
+  "devDependencies": {
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "node-cache": "^5.1.2",
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/price-compare-tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/price-compare-tool/issues"
+  },
+  "homepage": "https://github.com/yourusername/price-compare-tool#readme"
+}
