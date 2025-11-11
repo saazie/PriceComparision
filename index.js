@@ -6,7 +6,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const app = express();
-
+app.use(express.static(__dirname));
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -577,3 +577,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
