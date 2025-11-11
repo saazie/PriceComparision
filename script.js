@@ -16,6 +16,10 @@ class PriceComparison {
         this.searchDebounceTimer = null;
         this.isLoading = false;
         
+        // Mobile properties
+        this.mobileMenuBtn = null;
+        this.closeSidebarBtn = null;
+        
         // API Configuration
         this.API_BASE_URL = window.location.origin;
         this.CACHE_DURATION = 5 * 60 * 1000;
@@ -30,6 +34,10 @@ class PriceComparison {
         this.applyTheme(this.theme);
         this.setupMobileFilters();
         this.validateEnvironment();
+        this.optimizeForMobile();
+        
+        // Mobile resize handler
+        window.addEventListener('resize', () => this.optimizeForMobile());
     }
 
     setupEventListeners() {
@@ -88,6 +96,53 @@ class PriceComparison {
 
         // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+
+        // Mobile menu functionality
+        this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (this.mobileMenuBtn) {
+            this.mobileMenuBtn.addEventListener('click', () => this.toggleMobileMenu());
+        }
+
+        // Close sidebar for mobile
+        this.closeSidebarBtn = document.getElementById('close-sidebar');
+        if (this.closeSidebarBtn) {
+            this.closeSidebarBtn.addEventListener('click', () => this.closeMobileSidebar());
+        }
+    }
+
+    // Mobile menu methods
+    toggleMobileMenu() {
+        const navContainer = document.querySelector('.nav-container');
+        navContainer.classList.toggle('mobile-open');
+    }
+
+    closeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('active');
+    }
+
+    // Mobile search optimization
+    optimizeForMobile() {
+        if (window.innerWidth <= 576px) {
+            // Hide search text on mobile to save space
+            const searchBtn = document.getElementById('search-button');
+            if (searchBtn) {
+                const icon = searchBtn.querySelector('i');
+                const span = searchBtn.querySelector('span');
+                if (span) {
+                    span.style.display = 'none';
+                }
+            }
+        } else {
+            // Show search text on larger screens
+            const searchBtn = document.getElementById('search-button');
+            if (searchBtn) {
+                const span = searchBtn.querySelector('span');
+                if (span) {
+                    span.style.display = 'inline';
+                }
+            }
+        }
     }
 
     handleSearchInput(e) {
@@ -105,16 +160,20 @@ class PriceComparison {
         const mobileToggle = document.getElementById('mobile-filter-toggle');
         const sidebar = document.getElementById('sidebar');
 
-        mobileToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
+        if (mobileToggle && sidebar) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
 
-        // Close mobile filters when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
-                sidebar.classList.remove('active');
-            }
-        });
+            // Close mobile filters when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && 
+                    !mobileToggle.contains(e.target) &&
+                    !this.mobileMenuBtn?.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        }
     }
 
     validateEnvironment() {
