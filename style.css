@@ -1114,6 +1114,51 @@ div, span, p, li, a {
 }
 
 @media (max-width: 576px) {
+    .nav-container {
+        flex-direction: column;
+        height: auto;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .search-container {
+        order: 2;
+        width: 100%;
+        margin: 0;
+    }
+    
+    .search-bar {
+        margin-left: 0;
+        height: 45px;
+    }
+    
+    .search-bar input {
+        font-size: 16px;
+    }
+    
+    .select-wrapper {
+        order: 3;
+        width: 100%;
+        margin-right: 0;
+    }
+    
+    .header-actions {
+        order: 4;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+        order: 1;
+        align-self: flex-start;
+    }
+    
+    .logo {
+        order: 0;
+        align-self: center;
+    }
+    
     .product-image img {
         max-width: 180px !important;
         height: 140px !important;
@@ -1158,10 +1203,6 @@ div, span, p, li, a {
         font-size: 0.9rem;
     }
     
-    .nav-container {
-        padding: 0.75rem;
-    }
-    
     .search-btn {
         padding: 0 1rem;
     }
@@ -1190,3 +1231,4 @@ div, span, p, li, a {
         border: 1px solid #ccc;
     }
 }
+
