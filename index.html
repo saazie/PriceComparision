@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceCompare - Multi-Store Price Comparison</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="nav-container">
+                    <div class="logo">
+                        <i class="fas fa-balance-scale" aria-hidden="true"></i>
+                        <span class="logo-text">PriceCompare</span>
+                    
+                </div>
+                    <div class="search-container">
+                        <div class="search-bar">
+                            <input type="text" id="search-input" placeholder="Search for products (e.g., iPhone 16, MacBook Pro)" aria-label="Search products">
+                            <button id="search-button" class="search-btn" aria-label="Search">
+                                <i class="fas fa-search" aria-hidden="true"></i> Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Category Dropdown -->
+                    <div class="select-wrapper">
+                    <select class="category-select" id="main-category-select">
+                        <option value=""><i class="fa-solid fa-list"></i> Browse Categories</option>
+                        <option value="Appliances">Appliances</option>
+                        <option value="Arts, Crafts & Sewing">Arts, Crafts & Sewing</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Baby Products">Baby Products</option>
+                        <option value="Beauty">Beauty</option>
+                        <option value="Cell Phones & Accessories">Cell Phones & Accessories</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Health & Personal Care">Health & Personal Care</option>
+                        <option value="Home & Kitchen">Home & Kitchen</option>
+                        <option value="Industrial & Scientific">Industrial & Scientific</option>
+                        <option value="Office Products">Office Products</option>
+                        <option value="Patio, Lawn & Garden">Patio, Lawn & Garden</option>
+                        <option value="Pet Supplies">Pet Supplies</option>
+                        <option value="Software">Software</option>
+                        <option value="Sports & Outdoors">Sports & Outdoors</option>
+                        <option value="Tools & Home Improvement">Tools & Home Improvement</option>
+                        <option value="Toys & Games">Toys & Games</option>
+                    </select>
+                    </div>
+                    <div class="header-actions">
+                        <button class="theme-toggle" id="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+                            <i class="fas fa-moon" aria-hidden="true"></i>
+                        </button>
+                        <button class="view-toggle" id="view-toggle" title="Switch to Table View" aria-label="Switch view">
+                            <i class="fas fa-table" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Filters Toggle -->
+    <button class="mobile-filter-toggle" id="mobile-filter-toggle" aria-label="Open filters">
+        <i class="fas fa-filter" aria-hidden="true"></i> Filters
+    </button>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <!-- Sidebar Filters -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Filters</h3>
+                <button class="clear-filters" id="clear-filters" aria-label="Clear all filters">
+                    Clear All
+                </button>
+            </div>
+
+            <!-- Stores -->
+            <div class="filter-section">
+                <h4>Stores</h4>
+                <div class="platform-filters">
+                    <label class="platform-filter">
+                        <input type="checkbox" checked data-store="ebay" aria-label="Include eBay products">
+                        <span class="platform-badge ebay">
+                            <i class="fab fa-ebay" aria-hidden="true"></i> eBay
+                        </span>
+                    </label>
+                    <label class="platform-filter">
+                        <input type="checkbox" checked data-store="aliexpress" aria-label="Include AliExpress products">
+                        <span class="platform-badge aliexpress">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i> AliExpress
+                        </span>
+                    </label>
+                    <label class="platform-filter">
+                        <input type="checkbox" checked data-store="etsy" aria-label="Include Etsy products">
+                        <span class="platform-badge etsy">
+                            <i class="fas fa-gem" aria-hidden="true"></i> Etsy
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Rating Section -->
+            <div class="filter-section">
+                <h4>Minimum Rating</h4>
+                <div class="rating-filter">
+                    <div class="rating-stars" role="slider" aria-label="Minimum rating" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1">
+                        <span class="star active" data-rating="1" role="button" tabindex="0">★</span>
+                        <span class="star active" data-rating="2" role="button" tabindex="0">★</span>
+                        <span class="star active" data-rating="3" role="button" tabindex="0">★</span>
+                        <span class="star active" data-rating="4" role="button" tabindex="0">★</span>
+                        <span class="star active" data-rating="5" role="button" tabindex="0">★</span>
+                    </div>
+                    <span class="rating-text">1+ Stars</span>
+                </div>
+            </div>
+
+            <!-- Shipping -->
+            <div class="filter-section">
+                <h4>Shipping</h4>
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="free-shipping" aria-label="Show only free shipping">
+                    <span>Free Shipping Only</span>
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="prime-shipping" aria-label="Show only express shipping">
+                    <span>Express Shipping</span>
+                </label>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Content Header -->
+            <div class="content-header">
+                <div class="results-info">
+                    <h2 id="results-title">Popular Products</h2>
+                    <span class="results-count" id="results-count">Loading products...</span>
+                </div>
+                
+                
+                <div class="sort-control">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" aria-label="Sort products">
+                        <option value="relevance">Relevance</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Top Rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Empty State (Hidden by default) -->
+            <div id="empty-state" class="empty-state" style="display:none">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <h3>No products found</h3>
+                <p>Try adjusting your filters or search for something else.</p>
+            </div>
+
+            <!-- Grid View -->
+            <div class="comparison-view" id="grid-view">
+                <div class="platforms-header">
+                    <div class="platform-header active">eBay</div>
+                    <div class="platform-header active">AliExpress</div>
+                    <div class="platform-header active">Etsy</div>
+                </div>
+                
+                <div class="products-container" id="products-container">
+                    <!-- Products will be dynamically loaded here -->
+                </div>
+                
+                <!-- View More Button -->
+                <div class="view-more-container">
+                    <button class="btn-view-more" id="view-more-btn" aria-label="Load more products">View More</button>
+                </div>
+                
+                <!-- Loading State -->
+                <div class="loading-state" id="grid-loading">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Searching for the best prices...</p>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div class="table-view" id="table-view">
+                <table class="comparison-table" aria-label="Product comparison table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Product</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Rating</th>
+                            <th scope="col">Shipping</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Table rows will be dynamically loaded here -->
+                    </tbody>
+                </table>
+                
+                <!-- Loading State -->
+                <div class="loading-state" id="table-loading">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Searching for the best prices...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
