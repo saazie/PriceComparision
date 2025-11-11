@@ -6,7 +6,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const app = express();
-app.use(express.static(__dirname));
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -73,10 +73,91 @@ function validateEnvironment() {
 
 validateEnvironment();
 
+const HARAM_PRODUCTS = [
+    // ==================== ALCOHOL RELATED ====================
+    'alcohol', 'beer', 'wine', 'whiskey', 'vodka', 'rum', 'brandy', 'champagne',
+    'liquor', 'alcoholic', 'brewery', 'pub', 'bar', 'cocktail', 'drink', 'beverage',
+    'gin', 'tequila', 'scotch', 'bourbon', 'cognac', 'sake', 'absinthe', 'moonshine',
+    'vermouth', 'schnapps', 'liqueur', 'cider', 'stout', 'ale', 'lager', 'porter',
+    'malt', 'hops', 'fermentation', 'distilled', 'brew', 'intoxicat',
+    'red wine', 'white wine', 'rose wine', 'sparkling wine', 'fortified wine',
+    'port wine', 'sherry',
+    
+    // Partial alcohol matches
+    'alch', 'alc', 'whisk', 'brand', 'champ',
+
+    // ==================== PORK & HARAM ANIMALS ====================
+    'pork', 'bacon', 'ham', 'sausage', 'pepperoni', 'salami', 'pork belly',
+    'dog meat', 'cat meat', 'snake meat', 'frog legs',
+
+    // ==================== ADULT CONTENT ====================
+    'porn', 'xxx', 'adult', 'sex', 'erotic', 'nude', 'lingerie', 'condom',
+    'viagra', 'cialis', 'sex toy', 'vibrator', 'dildo',
+
+    // ==================== GAMBLING ====================
+    'casino', 'poker', 'roulette', 'betting', 'gambling', 'lottery', 'slot machine',
+
+    // ==================== MUSICAL INSTRUMENTS ====================
+    'guitar', 'electric guitar', 'acoustic guitar', 'bass guitar',
+    'piano', 'keyboard', 'synthesizer', 'digital piano',
+    'drums', 'drum set', 'drum kit', 'snare drum', 'bass drum',
+    'violin', 'viola', 'cello', 'double bass',
+    'flute', 'recorder', 'piccolo', 'bamboo flute',
+    'trumpet', 'trombone', 'saxophone', 'clarinet', 'oboe', 'bassoon',
+    'harmonica', 'accordion', 'concertina',
+    'harp', 'lyre', 'mandolin', 'banjo', 'ukulele',
+    'xylophone', 'marimba', 'vibraphone', 'glockenspiel',
+    'tambourine', 'bongo', 'congas', 'djembe', 'tabla',
+    'organ', 'pipe organ', 'electronic organ',
+    'sitar', 'veena', 'tanpura', 'sarangi',
+    'oud', 'qanun', 'ney', 'daf', 'riq',
+
+    // ==================== MUSIC EQUIPMENT ====================
+    'amplifier', 'guitar amp', 'bass amp',
+    'microphone', 'mic', 'karaoke microphone',
+    'mixer', 'audio mixer', 'dj mixer',
+    'studio monitor', 'pa system',
+    'music instrument', 'musical instrument', 'music gear',
+    'audio equipment', 'sound system', 'dj equipment',
+    'recording equipment', 'studio equipment',
+
+    // ==================== MUSIC BRANDS ====================
+    'fender', 'gibson', 'yamaha', 'roland', 'korg', 'casio',
+    'shure', 'akg', 'sennheiser', 'bose', 'jbl', 'marshall',
+
+    // ==================== NON-ISLAMIC FESTIVALS ====================
+    'christmas', 'easter', 'halloween', 'valentine',
+
+    // ==================== SHIRK & SUPERSTITION ====================
+    'idol', 'statue', 'cross', 'church wine', 'communion wine',
+    'tattoo', 'piercing', 'body art',
+    'magic', 'witchcraft', 'fortune telling',
+    'horoscope', 'zodiac', 'tarot cards'
+];
+
+// IMPROVED Islamic filter function
+function isHaramProduct(query) {
+    const lowerQuery = query.toLowerCase().trim();
+    
+    return HARAM_PRODUCTS.some(haramWord => {
+        if (lowerQuery === haramWord) return true;        // Exact match
+        if (lowerQuery.includes(haramWord)) return true;  // Partial match
+        
+        // Word boundary match
+        const regex = new RegExp(`\\b${haramWord}`, 'i');
+        return regex.test(lowerQuery);
+    });
+}
+
+// Islamic filter function
+function isHaramProduct(query) {
+    const lowerQuery = query.toLowerCase();
+    return HARAM_PRODUCTS.some(haramWord => lowerQuery.includes(haramWord));
+}
+
 // eBay credentials
 const clientId = process.env.EBAY_CLIENT_ID;
 const clientSecret = process.env.EBAY_CLIENT_SECRET;
-const env = process.env.EBAY_ENV || "sandbox";
 
 console.log("✅ All APIs Loaded - eBay, Etsy, AliExpress");
 console.log("🔒 Security middleware enabled");
@@ -376,10 +457,18 @@ app.get("/api/aliexpress/search", async (req, res) => {
 app.get("/api/search", async (req, res) => {
     const query = sanitizeInput(req.query.q || "laptop");
     
-    if (!query || query.length < 2) {
-        return sendError(res, 'Search query must be at least 2 characters', 400);
+    // ✅ ISLAMIC FILTER CHECK
+    if (isHaramProduct(query)) {
+        return res.json({
+            ebay: [],
+            etsy: [], 
+            aliexpress: [],
+            query: query,
+            restricted: true,
+            message: "This product category is restricted according to Islamic principles"
+        });
     }
-
+    
     const cacheKey = `combined:${query}`;
     const cached = cache.get(cacheKey);
     
@@ -577,4 +666,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
