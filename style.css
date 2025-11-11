@@ -1190,3 +1190,25 @@ div, span, p, li, a {
         border: 1px solid #ccc;
     }
 }
+/* Tablet aur Mobile par table view hide */
+@media (max-width: 1024px) {
+    .table-view {
+        display: none !important;
+    }
+    
+    #view-toggle {
+        display: none !important;
+    }
+}
+
+/* Desktop par table view show */
+@media (min-width: 1025px) {
+    .table-view {
+        display: none; /* Default hidden */
+    }
+    
+    .comparison-view {
+        display: block;
+    }
+}
+
