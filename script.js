@@ -1,13 +1,11 @@
 // PriceCompare - Multi-Store Price Comparison Tool
 class PriceComparison {
     constructor() {
-        // 👇 Step 1: Add these properties at the very top after constructor()
-        this.allProducts = [];  // will hold all fetched data
-        this.displayedProducts = []; // what's currently on screen
-        this.productsPerPage = 18; // 6 rows × 3 columns
+        this.allProducts = [];
+        this.displayedProducts = [];
+        this.productsPerPage = 18;
         this.currentPage = 1;
         
-        // Existing properties
         this.filteredProducts = [];
         this.currentView = 'grid';
         this.currentSort = 'relevance';
@@ -16,7 +14,6 @@ class PriceComparison {
         this.searchDebounceTimer = null;
         this.isLoading = false;
         
-        // API Configuration
         this.API_BASE_URL = window.location.origin;
         this.CACHE_DURATION = 5 * 60 * 1000;
         this.searchCache = new Map();
@@ -33,7 +30,6 @@ class PriceComparison {
     }
 
     setupEventListeners() {
-        // Search functionality with debounce
         this.boundPerformSearch = () => this.performSearch();
         this.boundHandleSearchInput = (e) => this.handleSearchInput(e);
         
@@ -43,35 +39,28 @@ class PriceComparison {
             if (e.key === 'Enter') this.performSearch();
         });
 
-        // Category filter event listener
         document.getElementById('main-category-select').addEventListener('change', (e) => {
             this.selectedCategory = e.target.value;
             this.applyCategoryFilter();
         });
 
-        // View toggle
         document.getElementById('view-toggle').addEventListener('click', () => this.toggleView());
 
-        // 👇 Step 3: Add the "Load More" button event listener
         document.getElementById("view-more-btn").addEventListener("click", () => {
             this.loadMoreProducts();
         });
 
-        // Sort functionality
         document.getElementById('sort-select').addEventListener('change', (e) => {
             this.currentSort = e.target.value;
             this.applySorting();
         });
 
-        // Filter functionality
         document.getElementById('clear-filters').addEventListener('click', () => this.clearFilters());
         
-        // Store filters
         document.querySelectorAll('.platform-filter input').forEach(checkbox => {
             checkbox.addEventListener('change', () => this.applyFilters());
         });
 
-        // Rating filter
         document.querySelectorAll('.rating-stars .star').forEach(star => {
             star.addEventListener('click', (e) => this.setRatingFilter(parseInt(e.target.dataset.rating)));
             star.addEventListener('keypress', (e) => {
@@ -82,11 +71,9 @@ class PriceComparison {
             });
         });
 
-        // Other filters
         document.getElementById('free-shipping').addEventListener('change', () => this.applyFilters());
         document.getElementById('prime-shipping').addEventListener('change', () => this.applyFilters());
 
-        // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
     }
 
@@ -109,7 +96,6 @@ class PriceComparison {
             sidebar.classList.toggle('active');
         });
 
-        // Close mobile filters when clicking outside
         document.addEventListener('click', (e) => {
             if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
                 sidebar.classList.remove('active');
@@ -141,7 +127,6 @@ class PriceComparison {
             console.error('Initial data load failed:', error);
             this.showError('Failed to load initial data');
             
-            // Fallback to sample data
             this.allProducts = this.generateSampleProducts();
             this.filteredProducts = [...this.allProducts];
             this.displayedProducts = this.filteredProducts.slice(0, this.productsPerPage);
@@ -153,7 +138,7 @@ class PriceComparison {
     async performSearch(query) {
         query = this.sanitizeInput(query || document.getElementById('search-input').value);
         
-        // Reset category on new search
+        this.resetPagination();
         this.selectedCategory = '';
         document.getElementById('main-category-select').value = '';
         
@@ -167,12 +152,10 @@ class PriceComparison {
             return;
         }
 
-        // Check cache first
         const cacheKey = `search:${query}:${this.selectedCategory}`;
         const cached = this.searchCache.get(cacheKey);
         
         if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
-            console.log('📦 Using cached results');
             this.processSearchResults(cached.data, query);
             return;
         }
@@ -203,7 +186,6 @@ class PriceComparison {
                 throw new Error('No data received from API');
             }
 
-            // Cache the results
             this.searchCache.set(cacheKey, {
                 data: data,
                 timestamp: Date.now()
@@ -215,7 +197,6 @@ class PriceComparison {
             console.error("❌ Search failed:", error);
             this.showError('Search failed. Using demo data...');
             
-            // Fallback to sample data
             this.allProducts = this.generateSampleProducts();
             if (this.selectedCategory) {
                 this.allProducts = this.allProducts.filter(product => 
@@ -233,53 +214,44 @@ class PriceComparison {
     }
 
     processSearchResults(data, query) {
-        console.log("🔍 RAW API DATA:", data);
-
-        // Process all three platforms with better error handling
         const ebayProducts = data.ebay ? data.ebay.map(item => this.convertEbayProduct(item)).filter(Boolean) : [];
         const etsyProducts = data.etsy ? data.etsy.map(item => this.convertEtsyProduct(item)).filter(Boolean) : [];
         const aliexpressProducts = data.aliexpress ? 
             data.aliexpress.map(item => this.convertAliExpressProduct(item)).filter(Boolean) : [];
 
-        console.log(`📊 Products Converted: ${ebayProducts.length} eBay + ${etsyProducts.length} Etsy + ${aliexpressProducts.length} AliExpress`);
-
-        // 👇 Step 2: Store everything in allProducts
         this.allProducts = [...ebayProducts, ...etsyProducts, ...aliexpressProducts];
 
-        // If no products from APIs, use sample data
         if (this.allProducts.length === 0) {
-            console.log("🔄 No API products, using sample data");
             this.allProducts = this.generateSampleProducts();
         }
 
-        // Mark best deals for all products
         this.markBestDeals(this.allProducts);
-
         this.filteredProducts = [...this.allProducts];
-        // 👇 Step 2: Use productsPerPage instead of productsPerLoad
         this.displayedProducts = this.filteredProducts.slice(0, this.productsPerPage);
         
-        console.log("🎯 FINAL PRODUCTS:", this.allProducts.length);
         this.renderProducts();
     }
 
-    // 👇 Step 4: Add this new method inside the class
+    resetPagination() {
+        this.currentPage = 1;
+        this.displayedProducts = [];
+    }
+
     loadMoreProducts() {
         const start = this.currentPage * this.productsPerPage;
         const end = start + this.productsPerPage;
         const nextProducts = this.filteredProducts.slice(start, end);
 
         if (nextProducts.length === 0) {
-            // Hide the button if no more
             document.getElementById("view-more-btn").style.display = "none";
             return;
         }
 
-        // Append to displayed
         this.displayedProducts = [...this.displayedProducts, ...nextProducts];
         this.currentPage++;
 
-        this.renderProducts(); // Refresh the grid
+        this.renderProducts();
+        this.updateViewMoreButton();
     }
 
     convertEbayProduct(item) {
@@ -370,10 +342,10 @@ class PriceComparison {
                 currentPrice = 20 + Math.random() * 300;
             }
             
-            const productTitle = item.product_title || item.title || `AliExpress Product`;
+            const productTitle = item.product_title || item.title || 'AliExpress Product';
             let finalTitle = productTitle;
             
-            if (productTitle.includes('ssd') || productTitle.toLowerCase().includes('product')) {
+            if (finalTitle.toLowerCase().includes('ssd') || finalTitle.toLowerCase().includes('product')) {
                 finalTitle = `Samsung Galaxy S22 - ${Math.floor(Math.random() * 1000)}`;
             }
             
@@ -470,7 +442,7 @@ class PriceComparison {
     }
 
     applyCategoryFilter() {
-        console.log('Applying category filter:', this.selectedCategory);
+        this.resetPagination();
         
         if (this.selectedCategory && this.selectedCategory !== '') {
             this.filteredProducts = this.allProducts.filter(product => 
@@ -487,8 +459,6 @@ class PriceComparison {
                 `Results for "${currentQuery}"`;
         }
         
-        // Reset pagination when filter changes
-        this.currentPage = 1;
         this.displayedProducts = this.filteredProducts.slice(0, this.productsPerPage);
         this.renderProducts();
         this.updateViewMoreButton();
@@ -508,74 +478,83 @@ class PriceComparison {
         }
     }
 
-   generateSampleProducts() {
-    const brands = {
-        electronics: ['Apple', 'Samsung', 'Sony', 'LG', 'Bose', 'Microsoft', 'Google', 'OnePlus'],
-        computers: ['Apple', 'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Razer'],
-        phones: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Oppo', 'Vivo', 'Realme'],
-        home: ['KitchenAid', 'Instant Pot', 'Dyson', 'iRobot', 'Philips', 'Black+Decker', 'Ninja', 'Cuisinart'],
-        fashion: ['Nike', 'Adidas', 'Levi\'s', 'Under Armour', 'Puma', 'Reebok', 'New Balance', 'Skechers']
-    };
+    generateSampleProducts() {
+        const brands = {
+            electronics: ['Apple', 'Samsung', 'Sony', 'LG', 'Bose', 'Microsoft', 'Google', 'OnePlus'],
+            computers: ['Apple', 'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Razer'],
+            phones: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Oppo', 'Vivo', 'Realme'],
+            home: ['KitchenAid', 'Instant Pot', 'Dyson', 'iRobot', 'Philips', 'Black+Decker', 'Ninja', 'Cuisinart'],
+            fashion: ['Nike', 'Adidas', 'Levi\'s', 'Under Armour', 'Puma', 'Reebok', 'New Balance', 'Skechers']
+        };
 
-    const categories = ['Electronics', 'Home & Kitchen', 'Sports & Outdoors', 'Beauty', 'Toys & Games', 'Clothing', 'Books', 'Automotive'];
-    
-    const stores = [
-        { name: 'eBay', class: 'ebay' },
-        { name: 'Etsy', class: 'etsy' },
-        { name: 'AliExpress', class: 'aliexpress' }
-    ];
-
-    const products = [];
+        const categories = ['Electronics', 'Home & Kitchen', 'Sports & Outdoors', 'Beauty', 'Toys & Games', 'Clothing', 'Books', 'Automotive'];
         
+        const stores = [
+            { name: 'eBay', class: 'ebay' },
+            { name: 'Etsy', class: 'etsy' },
+            { name: 'AliExpress', class: 'aliexpress' }
+        ];
+
+        const products = [];
+            
         categories.forEach(category => {
-        const categoryBrands = this.getBrandsForCategory(category, brands);
-        
-        stores.forEach(store => {
-            for (let i = 0; i < 8; i++) { // Increased from 3 to 8
-                const brand = categoryBrands[Math.floor(Math.random() * categoryBrands.length)];
-                
-                const basePrice = this.getBasePrice(category, brand);
-                const currentPrice = basePrice * (0.7 + Math.random() * 0.6);
-                const originalPrice = currentPrice * (1 + Math.random() * 0.3);
-                const discount = Math.round((1 - currentPrice / originalPrice) * 100);
-                
-                const lastPrice = originalPrice * (0.9 + Math.random() * 0.2);
-                const priceChange = ((currentPrice - lastPrice) / lastPrice) * 100;
-                
-                products.push({
-                    id: `${store.name}-${category}-${brand}-${i}-${Date.now()}-${Math.random()}`,
-                    name: `${brand} ${this.getProductName(category, i)}`,
-                    brand: brand,
-                    category: category,
-                    store: store.name,
-                    storeClass: store.class,
-                    image: this.getFallbackImage(),
-                    price: Math.round(currentPrice * 100) / 100,
-                    originalPrice: Math.round(originalPrice * 100) / 100,
-                    discount: discount > 5 ? discount : 0,
-                    rating: parseFloat((3 + Math.random() * 2).toFixed(1)), // Better ratings
-                    reviewCount: Math.floor(Math.random() * 10000),
-                    shipping: Math.random() > 0.3 ? 'Free Shipping' : '$5.99 Shipping',
-                    primeShipping: store.name === 'Etsy' ? Math.random() > 0.5 : false,
-                    condition: 'New',
-                    inStock: true,
-                    priceChange: priceChange,
-                    lastUpdated: new Date(),
-                    isBestDeal: false,
-                    shopName: store.name === 'eBay' ? `eBay_Seller_${i+1}` : 
-                             store.name === 'Etsy' ? `Etsy_Shop_${i+1}` : 
-                             `Global_Store_${i+1}`,
-                    deliveryTime: store.name === 'eBay' ? '3-7 days' : 
-                                 store.name === 'Etsy' ? '7-14 days' : 
-                                 '15-25 days'
-                });
-            }
+            const categoryBrands = this.getBrandsForCategory(category, brands);
+            
+            stores.forEach(store => {
+                for (let i = 0; i < 8; i++) {
+                    const brand = categoryBrands[Math.floor(Math.random() * categoryBrands.length)];
+                    
+                    const basePrice = this.getBasePrice(category, brand);
+                    const currentPrice = basePrice * (0.7 + Math.random() * 0.6);
+                    const originalPrice = currentPrice * (1 + Math.random() * 0.3);
+                    const discount = Math.round((1 - currentPrice / originalPrice) * 100);
+                    
+                    const lastPrice = originalPrice * (0.9 + Math.random() * 0.2);
+                    const priceChange = ((currentPrice - lastPrice) / lastPrice) * 100;
+                    
+                    products.push({
+                        id: `${store.name}-${category}-${brand}-${i}-${Date.now()}-${Math.random()}`,
+                        name: `${brand} ${this.getProductName(category, i)}`,
+                        brand: brand,
+                        category: category,
+                        store: store.name,
+                        storeClass: store.class,
+                        image: this.getFallbackImage(),
+                        price: Math.round(currentPrice * 100) / 100,
+                        originalPrice: Math.round(originalPrice * 100) / 100,
+                        discount: discount > 5 ? discount : 0,
+                        rating: parseFloat((3 + Math.random() * 2).toFixed(1)),
+                        reviewCount: Math.floor(Math.random() * 10000),
+                        shipping: Math.random() > 0.3 ? 'Free Shipping' : '$5.99 Shipping',
+                        primeShipping: store.name === 'Etsy' ? Math.random() > 0.5 : false,
+                        condition: 'New',
+                        inStock: true,
+                        priceChange: priceChange,
+                        lastUpdated: new Date(),
+                        isBestDeal: false,
+                        shopName: store.name === 'eBay' ? `eBay_Seller_${i+1}` : 
+                                 store.name === 'Etsy' ? `Etsy_Shop_${i+1}` : 
+                                 `Global_Store_${i+1}`,
+                        deliveryTime: store.name === 'eBay' ? '3-7 days' : 
+                                     store.name === 'Etsy' ? '7-14 days' : 
+                                     '15-25 days'
+                    });
+                }
+            });
         });
-    });
-         this.markBestDeals(products);
-    console.log(`📊 Generated ${products.length} sample products`);
-    return products;
-}
+        
+        this.markBestDeals(products);
+        return products;
+    }
+
+    getBrandsForCategory(category, brands) {
+        if (category === 'Electronics') return brands.electronics;
+        if (category === 'Home & Kitchen') return brands.home;
+        if (category === 'Clothing') return brands.fashion;
+        if (category === 'Sports & Outdoors') return brands.fashion;
+        return brands.electronics;
+    }
+
     markBestDeals(products) {
         const productGroups = {};
         
@@ -625,7 +604,6 @@ class PriceComparison {
     }
 
     renderProducts() {
-        // 👇 Step 5: Modified to use displayedProducts
         if (this.currentView === 'grid') {
             this.renderGridView();
         } else {
@@ -658,32 +636,21 @@ class PriceComparison {
         }
     }
 
-    // 👇 Step 5: Modified renderGridView method
     renderGridView() {
         const container = document.getElementById('products-container');
         if (!container) return;
 
-        container.innerHTML = ''; // this clears before re-render
+        container.innerHTML = '';
 
         if (this.displayedProducts.length === 0) {
             this.toggleEmptyState();
             return;
         }
-
-        console.log("🎯 RENDERING Products:", this.displayedProducts.length);
         
-        // Manual store mapping
         const ebayProducts = this.displayedProducts.filter(p => p.store === "eBay");
         const aliexpressProducts = this.displayedProducts.filter(p => p.store === "AliExpress"); 
         const etsyProducts = this.displayedProducts.filter(p => p.store === "Etsy");
 
-        console.log("📊 MANUAL STORE COUNT:", {
-            eBay: ebayProducts.length,
-            AliExpress: aliexpressProducts.length,
-            Etsy: etsyProducts.length
-        });
-
-        // Create columns manually
         const stores = [
             { name: 'eBay', products: ebayProducts },
             { name: 'AliExpress', products: aliexpressProducts },
@@ -694,10 +661,7 @@ class PriceComparison {
             const column = document.createElement('div');
             column.className = 'product-column';
             
-            console.log(`📦 Creating ${store.name} column with ${store.products.length} products`);
-            
             if (store.products.length > 0) {
-                // 👇 Step 5: Loop through displayedProducts
                 store.products.forEach(product => {
                     const productCard = this.createProductCard(product);
                     column.appendChild(productCard);
@@ -713,8 +677,6 @@ class PriceComparison {
             
             container.appendChild(column);
         });
-
-        console.log("✅ RENDERING COMPLETE");
     }
 
     createProductCard(product) {
@@ -722,7 +684,6 @@ class PriceComparison {
         card.className = 'product-card';
         card.innerHTML = this.getProductCardHTML(product);
         
-        // Add event listeners
         const primaryBtn = card.querySelector('.btn-primary');
         const outlineBtn = card.querySelector('.btn-outline');
         
@@ -784,7 +745,6 @@ class PriceComparison {
             return;
         }
 
-        // 👇 Step 5: Loop through displayedProducts
         this.displayedProducts.forEach(product => {
             const row = this.createTableRow(product);
             tbody.appendChild(row);
@@ -850,7 +810,6 @@ class PriceComparison {
             </td>
         `;
         
-        // Add event listeners
         const primaryBtn = row.querySelector('.btn-primary');
         const outlineBtn = row.querySelector('.btn-outline');
         
@@ -872,27 +831,18 @@ class PriceComparison {
         const primeShipping = document.getElementById('prime-shipping').checked;
 
         this.filteredProducts = this.allProducts.filter(product => {
-            // Store filter
             if (selectedStores.length > 0 && !selectedStores.includes(product.storeClass)) return false;
-            
-            // Rating filter
             if (product.rating < minRating) return false;
-            
-            // Shipping filter
             if (freeShipping && !product.shipping.includes('Free')) return false;
             if (primeShipping && !product.primeShipping) return false;
-            
-            // Category filter
             if (this.selectedCategory && product.category !== this.selectedCategory) return false;
             
             return true;
         });
 
-        // Re-mark best deals after filtering
         this.markBestDeals(this.filteredProducts);
         
-        // Reset pagination when filters change
-        this.currentPage = 1;
+        this.resetPagination();
         this.displayedProducts = this.filteredProducts.slice(0, this.productsPerPage);
         this.applySorting();
         this.updateViewMoreButton();
@@ -910,12 +860,10 @@ class PriceComparison {
                 this.filteredProducts.sort((a, b) => b.rating - a.rating);
                 break;
             default:
-                // Relevance - keep original order
                 break;
         }
 
-        // Reset to first page when sorting changes
-        this.currentPage = 1;
+        this.resetPagination();
         this.displayedProducts = this.filteredProducts.slice(0, this.productsPerPage);
         this.renderProducts();
     }
@@ -964,14 +912,11 @@ class PriceComparison {
     }
 
     toggleWatchlist(productId) {
-        console.log('Toggling watchlist for product:', productId);
         const event = new CustomEvent('watchlistToggle', { detail: { productId } });
         document.dispatchEvent(event);
     }
 
     trackPurchase(product) {
-        console.log('Redirecting to purchase:', product.name, 'from', product.store);
-        
         let storeUrl;
         
         if (product.store === 'Etsy') {
@@ -1021,7 +966,6 @@ class PriceComparison {
     }
 
     showError(message) {
-        console.error('Error:', message);
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.style.cssText = `
@@ -1048,15 +992,12 @@ class PriceComparison {
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const priceComparison = new PriceComparison();
-    
-    // Make it globally available for debugging
     window.priceComparison = priceComparison;
 });
 
 // Watchlist toggle event listener
 document.addEventListener('watchlistToggle', (event) => {
     const { productId } = event.detail;
-    console.log('Watchlist updated for product:', productId);
 });
 
 window.addEventListener('scroll', () => {
