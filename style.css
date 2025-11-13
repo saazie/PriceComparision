@@ -1145,6 +1145,7 @@ div, span, p, li, a {
         border: 1px solid #ccc;
     }
 }
+
 /* ===== MOBILE & TABLET RESPONSIVE STYLES ===== */
 @media (max-width: 1024px) {
     /* Hide table view on mobile & tablet */
